@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>グレースケール処理とパフォーマンス測定</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* フォント設定 */
+        body { font-family: 'Inter', sans-serif; background-color: #f7f9fb; }
+        /* キャンバスの枠線と影 */
+        #originalCanvas, #processedCanvas {
+            border: 1px solid #ddd;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            max-width: 100%;
+            height: auto;
+            background-color: #fff;
+        }
+        /* ボタンのスタイル */
+        .btn-primary {
+            transition: all 0.2s;
+        }
+        .btn-primary:hover {
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body class="p-8">
+
+    <div class="max-w-6xl mx-auto space-y-8">
+        <h1 class="text-4xl font-extrabold text-gray-900 text-center mb-6">
+            画像処理パフォーマンス比較デモ
+        </h1>
+        <p class="text-center text-gray-600">
+            画像を選択し、グレースケール処理の実行時間を計測します。
+        </p>
+
+        <!-- コントロールパネル -->
+        <div class="bg-white p-6 rounded-xl shadow-lg flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+            
+            <!-- 画像選択 -->
+            <input type="file" id="imageInput" accept="image/*" class="hidden" onchange="handleImageSelection(event)">
+            <button onclick="document.getElementById('imageInput').click()" 
+                    class="btn-primary px-6 py-3 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600">
+                画像を選択
+            </button>
+
+            <!-- 処理実行ボタン -->
+            <button id="processButton" onclick="processImage('js')" disabled 
+                    class="px-6 py-3 bg-green-500 text-white font-semibold rounded-lg shadow-md hover:bg-green-600 disabled:bg-gray-400">
+                グレースケール化 (JavaScript)
+            </button>
+        </div>
+
+        <!-- 結果表示エリア -->
+        <div class="mt-8 bg-white p-6 rounded-xl shadow-lg">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">処理結果</h2>
+            <div id="statusMessage" class="text-lg font-medium text-blue-700">画像をロードしてください。</div>
+            <div id="timeResult" class="text-xl font-bold mt-2 text-red-600"></div>
+        </div>
+
+        <!-- 画像表示エリア -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+            <div class="space-y-4">
+                <h2 class="text-xl font-semibold text-gray-700">オリジナル画像</h2>
+                <canvas id="originalCanvas"></canvas>
+            </div>
+            <div class="space-y-4">
+                <h2 class="text-xl font-semibold text-gray-700">処理済み画像</h2>
+                <canvas id="processedCanvas"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM要素の取得
+        const originalCanvas = document.getElementById('originalCanvas');
+        const processedCanvas = document.getElementById('processedCanvas');
+        const processButton = document.getElementById('processButton');
+        const statusMessage = document.getElementById('statusMessage');
+        const timeResult = document.getElementById('timeResult');
+        
+        let originalImage; // ロードされたImageオブジェクトを保持
+
+        // --- 1. 画像選択と表示 ---
+        function handleImageSelection(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            statusMessage.textContent = '画像をロード中...';
+            timeResult.textContent = '';
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    originalImage = img;
+                    
+                    // キャンバスのサイズを画像に合わせる
+                    const size = Math.min(img.width, img.height, 512); // 最大サイズを512x512に制限
+                    originalCanvas.width = img.width;
+                    originalCanvas.height = img.height;
+                    processedCanvas.width = img.width;
+                    processedCanvas.height = img.height;
+                    
+                    // オリジナルキャンバスに画像を描画
+                    const ctx = originalCanvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, img.width, img.height);
+                    
+                    // 処理後のキャンバスをクリア
+                    processedCanvas.getContext('2d').clearRect(0, 0, img.width, img.height);
+                    
+                    statusMessage.textContent = `画像がロードされました。サイズ: ${img.width} x ${img.height}`;
+                    processButton.disabled = false;
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // --- 2. グレースケール処理の実行（ネイティブJavaScript） ---
+        function processImage(mode) {
+            if (!originalImage) {
+                statusMessage.textContent = '先に画像をロードしてください。';
+                return;
+            }
+
+            statusMessage.textContent = 'グレースケール処理を実行中...';
+            timeResult.textContent = '';
+            processButton.disabled = true;
+
+            const width = originalCanvas.width;
+            const height = originalCanvas.height;
+            const ctx = originalCanvas.getContext('2d');
+            
+            // オリジナル画像データを取得
+            let imageData = ctx.getImageData(0, 0, width, height);
+            let data = imageData.data;
+            const length = data.length;
+
+            // --- パフォーマンス計測開始 ---
+            const startTime = performance.now();
+
+            // ----------------------------------------------------
+            // 💡 コア計算ロジック (JavaScript版)
+            // ----------------------------------------------------
+            
+            // RGBAデータ（4バイト/ピクセル）に対して反復処理
+            for (let i = 0; i < length; i += 4) {
+                // R, G, B の平均を計算 (グレースケール値)
+                // この加算・除算の繰り返しが計算負荷となる
+                const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+
+                // R, G, B の値を平均値で置き換える
+                data[i]     = avg; // R
+                data[i + 1] = avg; // G
+                data[i + 2] = avg; // B
+                // data[i + 3] はアルファ値 (A) なので変更しない
+            }
+
+            // ----------------------------------------------------
+            
+            // --- パフォーマンス計測終了 ---
+            const endTime = performance.now();
+            const timeMs = (endTime - startTime).toFixed(2);
+
+            // 3. 結果の表示
+            
+            // 処理後のデータを新しいキャンバスに描画
+            processedCanvas.getContext('2d').putImageData(imageData, 0, 0);
+
+            // 結果メッセージの更新
+            statusMessage.textContent = 'グレースケール処理が完了しました。';
+            timeResult.textContent = `実行時間 (JavaScript): ${timeMs} ミリ秒`;
+            processButton.disabled = false;
+        }
+
+    </script>
+</body>
+</html>
