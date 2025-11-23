@@ -181,7 +181,7 @@
 
             function jsGrayscale(data, length) {
                 // 処理後のデータ格納用 (元の配列のコピー)
-                const processedData = new Uint8ClampedArray(data);
+                const processedData = Uint8ClampedArray.from(data.slice());
 
                 // RGBAデータ（4バイト/ピクセル）に対して反復処理
                 for (let i = 0; i < length; i += 4) {
