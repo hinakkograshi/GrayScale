@@ -160,6 +160,11 @@
             let data = imageData.data;
             const length = data.length;
 
+            if (mode === 'wasm') {
+                // warmup
+                convertBySwift(imageData.data, imageData.data.length);
+            }
+
             // --- パフォーマンス計測開始 ---
             const startTime = performance.now();
 
