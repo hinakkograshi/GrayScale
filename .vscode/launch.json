@@ -25,20 +25,20 @@
             "request": "launch",
             "args": [],
             "cwd": "${workspaceFolder:GrayScale}",
-            "name": "Debug Hello",
-            "target": "Hello",
+            "name": "Debug GrayScale",
+            "target": "GrayScale",
             "configuration": "debug",
-            "preLaunchTask": "swift: Build Debug Hello"
+            "preLaunchTask": "swift: Build Debug GrayScale"
         },
         {
             "type": "swift",
             "request": "launch",
             "args": [],
             "cwd": "${workspaceFolder:GrayScale}",
-            "name": "Release Hello",
-            "target": "Hello",
+            "name": "Release GrayScale",
+            "target": "GrayScale",
             "configuration": "release",
-            "preLaunchTask": "swift: Build Release Hello"
+            "preLaunchTask": "swift: Build Release GrayScale"
         }
     ]
 }
