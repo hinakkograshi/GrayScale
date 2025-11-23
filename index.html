@@ -199,18 +199,18 @@
 
             // --- パフォーマンス計測終了 ---
             const endTime = performance.now();
-            const timeMs = (endTime - startTime).toFixed(2);
-
-            // 3. 結果の表示
+            const timeMs = (endTime - startTime).toFixed(2);         
 
             // 処理後のデータを新しいキャンバスに描画
             let finalImageData = ctx.createImageData(width, height);
             finalImageData.data.set(processedData);
             processedCanvas.getContext('2d').putImageData(finalImageData, 0, 0);
 
+            const modeName = mode === 'js' ? 'JavaScript' : 'SwiftWasm';
+
             // 結果メッセージの更新
             statusMessage.textContent = 'グレースケール処理が完了しました。';
-            timeResult.textContent = `実行時間 (JavaScript): ${timeMs} ミリ秒`;
+            timeResult.textContent = `${timeMs} ミリ秒`;
             processButton.disabled = false;
             processButtonWasm.disabled = false;
         }
