@@ -5,7 +5,10 @@ import PackageDescription
 
 let package = Package(
     name: "GrayScale",
-    platforms: [.iOS(.v13)],
+    platforms: [
+        .iOS(.v13),
+        .macOS(.v10_15) 
+    ],
     dependencies: [
         .package(url: "https://github.com/swiftwasm/JavaScriptKit.git", branch: "main"),
     ],
