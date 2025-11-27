@@ -12,20 +12,33 @@ JSObject.global["convertBySwift"] = .object(
 )
 
 func makeGrascale(data: UnsafeBufferPointer<UInt8>) -> JSUInt8ClampedArray {
-    let out = UnsafeMutableBufferPointer<UInt8>.allocate(capacity: data.count)
+    let count = data.count
+    // 1. 新しいバッファをアロケートし、元のデータで初期化（コピー）
+    let out = UnsafeMutableBufferPointer<UInt8>.allocate(capacity: count)
+    _ = out.initialize(from: data) // <- 初期化とコピーを同時に実行
+
     defer {
+        // out.deallocate() の代わりに、JSUInt8ClampedArrayの生成時に渡すことで、
+        // Swiftのメモリ管理の外に出す（Wasmではこの部分の扱いに注意が必要）
+        // ただし、この関数内で完結させるなら deallocate は必要
         out.deallocate()
     }
-    do {
-        for i in stride(from: 0, to: data.count, by: 4) {
-            let r = Float(data[i])
-            let g = Float(data[i + 1])
-            let b = Float(data[i + 2])
-            let gray = UInt8(0.299 * r + 0.587 * g + 0.114 * b)
-            out[i] = gray
-            out[i + 1] = gray
-            out[i + 2] = gray
-        }
+
+    // 2. グレースケール計算のみを実行
+    for i in stride(from: 0, to: count, by: 4) {
+        let r = Float(out[i])
+        let g = Float(out[i + 1])
+        let b = Float(out[i + 2])
+
+        // 輝度アルゴリズム
+        let grayValue = UInt8(0.299 * r + 0.587 * g + 0.114 * b)
+
+        out[i] = grayValue     // Rを上書き
+        out[i + 1] = grayValue // Gを上書き
+        out[i + 2] = grayValue // Bを上書き
+        // out[i + 3] (アルファ値) は変更しない
     }
+    
+    // 3. 結果を返す
     return JSUInt8ClampedArray(buffer: UnsafeBufferPointer(out))
 }
