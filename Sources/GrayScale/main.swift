@@ -15,6 +15,9 @@ func makeGrascale(data: UnsafeBufferPointer<UInt8>) -> JSUInt8ClampedArray {
     let count = data.count
     // 1. 新しいバッファをアロケートし、元のデータで初期化（コピー）
     let out = UnsafeMutableBufferPointer<UInt8>.allocate(capacity: count)
+    // 画像のアルファチャンネル（透明度）が適切に保持されるようになった
+    // i+3 の位置（アルファ値）への書き込みがなかったため、out[i + 3]の値は未初期化のまま.
+    // 0 に近かった場合、透明に見えてしまっていた
     _ = out.initialize(from: data) // <- 初期化とコピーを同時に実行
 
     defer {
