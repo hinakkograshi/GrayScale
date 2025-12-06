@@ -71,4 +71,4 @@ Webブラウザで表示されたアドレスにアクセスし、「GrayScale�
 画像を選択し、グレースケール化(JavaScript)ボタンとグレースケール化(JavaScript)ボタンとグレースケール化(SwiftWasm)ボタンでグレースケール処理を比較する。
 
 ※解像度が高い8Kの画像等で比較すると速度の違いがわかりやすいです。
-
+<img width="1000" alt="スクリーンショット 2025-12-06 12 08 00" src="https://github.com/user-attachments/assets/71853df4-d370-4358-b125-3c5dada740d4" />
