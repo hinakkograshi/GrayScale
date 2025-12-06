@@ -5,7 +5,6 @@ let document = JSObject.global.document
 JSObject.global["convertBySwift"] = .object(
     JSClosure { args in
         let dataJS = args[0].object!
-        let lengthJS = args[1].number!
         let typedArray = JSUInt8ClampedArray(unsafelyWrapping: dataJS)
         return typedArray.withUnsafeBytes { makeGrascale(data: $0) }.jsValue
     }
@@ -13,7 +12,7 @@ JSObject.global["convertBySwift"] = .object(
 
 func makeGrascale(data: UnsafeBufferPointer<UInt8>) -> JSUInt8ClampedArray {
     let count = data.count
-    // 1. 新しいバッファをアロケートし、元のデータで初期化（コピー）
+    // 新しいバッファをアロケートし、元のデータで初期化（コピー）
     let out = UnsafeMutableBufferPointer<UInt8>.allocate(capacity: count)
     // 画像のアルファチャンネル（透明度）が適切に保持されるようになった
     // i+3 の位置（アルファ値）への書き込みがなかったため、out[i + 3]の値は未初期化のまま.

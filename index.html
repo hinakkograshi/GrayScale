@@ -162,7 +162,7 @@
 
             if (mode === 'wasm') {
                 // warmup
-                convertBySwift(imageData.data, imageData.data.length);
+                convertBySwift(imageData.data);
             }
 
             // --- パフォーマンス計測開始 ---
@@ -171,7 +171,6 @@
             // ----------------------------------------------------
             // 💡 コア計算ロジック (JavaScript版)
             // ----------------------------------------------------
-            // 初期メッセージ
             statusMessage.textContent = `${mode === 'js' ? 'JavaScript' : 'SwiftWasm'} 処理を実行中...`;
 
             let processedData;
@@ -181,7 +180,7 @@
 
             } else if (mode === 'wasm') {
 
-                processedData = convertBySwift(imageData.data, imageData.data.length);
+                processedData = convertBySwift(imageData.data);
             }
 
             function jsGrayscale(data, length) {
@@ -190,14 +189,17 @@
 
                 // RGBAデータ（4バイト/ピクセル）に対して反復処理
                 for (let i = 0; i < length; i += 4) {
-                    // R, G, B の平均を計算 (グレースケール値)
-                    const avg = (processedData[i] + processedData[i + 1] + processedData[i + 2]) / 3;
+                    const r = processedData[i];
+                    const g = processedData[i + 1];
+                    const b = processedData[i + 2];
 
-                    // R, G, B の値を平均値で置き換える
-                    processedData[i] = avg; // R
-                    processedData[i + 1] = avg; // G
-                    processedData[i + 2] = avg; // B
-                    // A (i + 3) は変更しない
+                    // 輝度アルゴリズム
+                    const grayValue = 0.299 * r + 0.587 * g + 0.114 * b;
+
+                    // R, G, B の値を輝度値で置き換える
+                    processedData[i] = grayValue;     // R
+                    processedData[i + 1] = grayValue; // G
+                    processedData[i + 2] = grayValue; // B
                 }
                 return processedData;
             }
